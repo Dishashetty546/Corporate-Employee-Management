@@ -1,6 +1,13 @@
 LOGIN PAGE
-
+---------------------------------------------------------------------------------------------------------------------------------------
 1. ADMIN - 
+database - employee_db
+SHOW DATABASES;
+USE employee_db
+ INSERT INTO admin VALUES();
+
+
+
 INSERT ADMIN CREDENTIALS INTO DATABASE - 
 CREATE TABLE admin (
          id INT AUTO_INCREMENT PRIMARY KEY,
@@ -8,25 +15,92 @@ CREATE TABLE admin (
          password VARCHAR(255) NOT NULL
         );
 
+        INSERT INTO admin VALUES(1,'dishashetty546@gmail.com','Disha@123');
+
 http://localhost:3000/auth/adminlogin  POST
 
 {
-  "email": "admin@example.com",
-  "password": "hashed_password_here"
+  "email": "dishashetty546@gmail.com",
+  "password": "Disha@123"
 }
+
 
 O/P:
 {
     "loginStatus": true
 }
+-------------------------------------------------------------------------------------------------------------------------------------------------------
+2. 
 
-2. EMPLOYEE LOGIN 
+EMPLOYEE LAGIN PAGE
 
-CREATE TABLE employee (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    email VARCHAR(255) NOT NULL,
-    password VARCHAR(255) NOT NULL
-);
+TABLE CREATION
+CREATE DATABASE employee_db;
+ USE employee_db;
+
+  CREATE TABLE employee (
+    ->   id INT AUTO_INCREMENT PRIMARY KEY,
+    ->   email VARCHAR(255) UNIQUE NOT NULL,
+    ->   password VARCHAR(255) NOT NULL,
+    ->   name VARCHAR(100),
+    ->   role VARCHAR(50)
+    -> );
+
+     INSERT INTO employee (email, password, name, role) VALUES ('test1@example.com', 'password123', 'John Doe', 'Employee');
+
+TESTING
+POST http://localhost:3000/employee/employee_login
+Content-type  application/json
+
+{
+  "email": "test1@example.com",
+  "password": "password123"
+}
+
+o/P: 
+{
+    "loginStatus": true,
+    "id": 3
+}
+------------------------------------------------------------------------------------------------------------------------------------------------------
+3. 
+CREATE CATEGORY TABLE
+CREATE TABLE category (
+    ->   id INT AUTO_INCREMENT PRIMARY KEY,
+    ->   name VARCHAR(100) NOT NULL UNIQUE
+    -> );
+
+    INSERTING:
+    
+mysql> INSERT INTO category (name) VALUES ('Electronics');
+Query OK, 1 row affected (0.01 sec)
+
+mysql> INSERT INTO category (name) VALUES ('Furniture');
+Query OK, 1 row affected (0.01 sec)
+
+mysql> INSERT INTO category (name) VALUES ('Clothing');
+Query OK, 1 row affected (0.00 sec)
+
+
+ GET   http://localhost:3000/auth/category
+
+ {
+    "Status": true,
+    "Result": [
+        {
+            "id": 3,
+            "name": "Clothing"
+        },
+        {
+            "id": 1,
+            "name": "Electronics"
+        },
+        {
+            "id": 2,
+            "name": "Furniture"
+        }
+    ]
+}
 
 
 

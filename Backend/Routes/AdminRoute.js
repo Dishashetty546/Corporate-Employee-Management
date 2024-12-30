@@ -1,13 +1,12 @@
 import express from "express";
 import con from "../utils/db.js";
 import jwt from "jsonwebtoken";
-import bcrypt from "bcrypt";
 import multer from "multer";
 import path from "path";
 
 const router = express.Router();
 
-// Admin login route
+// Admin login route (no password hashing)
 router.post("/adminlogin", (req, res) => {
   const sql = "SELECT * from admin WHERE email = ?";
   con.query(sql, [req.body.email], (err, result) => {
@@ -16,29 +15,21 @@ router.post("/adminlogin", (req, res) => {
     if (result.length > 0) {
       const admin = result[0];
 
-      // Compare passwords using bcrypt
-      bcrypt.compare(req.body.password, admin.password, (err, isMatch) => {
-        if (err)
-          return res.json({
-            loginStatus: false,
-            Error: "Password comparison error",
-          });
-
-        if (isMatch) {
-          const token = jwt.sign(
-            { role: "admin", email: admin.email, id: admin.id },
-            "jwt_secret_key",
-            { expiresIn: "1d" }
-          );
-          res.cookie("token", token);
-          return res.json({ loginStatus: true });
-        } else {
-          return res.json({
-            loginStatus: false,
-            Error: "Wrong email or password",
-          });
-        }
-      });
+      // Direct password comparison (no bcrypt)
+      if (req.body.password === admin.password) {
+        const token = jwt.sign(
+          { role: "admin", email: admin.email, id: admin.id },
+          "jwt_secret_key",
+          { expiresIn: "1d" }
+        );
+        res.cookie("token", token);
+        return res.json({ loginStatus: true });
+      } else {
+        return res.json({
+          loginStatus: false,
+          Error: "Wrong email or password",
+        });
+      }
     } else {
       return res.json({ loginStatus: false, Error: "Wrong email or password" });
     }
@@ -58,8 +49,11 @@ router.get("/category", (req, res) => {
 router.post("/add_category", (req, res) => {
   const sql = "INSERT INTO category (name) VALUES (?)";
   con.query(sql, [req.body.category], (err, result) => {
-    if (err) return res.json({ Status: false, Error: "Query Error" });
-    return res.json({ Status: true });
+    if (err) {
+      console.error("SQL Error:", err.message); // Log the error for debugging
+      return res.json({ Status: false, Error: "Query Error" });
+    }
+    return res.json({ Status: true, Message: "Category added successfully" });
   });
 });
 
@@ -75,74 +69,43 @@ const storage = multer.diskStorage({
     );
   },
 });
-const upload = multer({
-  storage: storage,
-});
+const upload = multer({ storage: storage });
 
 // Add new employee with image upload
 router.post("/add_employee", upload.single("image"), (req, res) => {
-  const sql = `INSERT INTO employee 
-    (name, email, password, address, salary, image, category_id) 
-    VALUES (?)`;
+  // Ensure required fields are present
+  if (
+    !req.body.name ||
+    !req.body.email ||
+    !req.body.password ||
+    !req.body.salary ||
+    !req.body.category_id
+  ) {
+    return res.json({ Status: false, Error: "Missing required fields" });
+  }
 
-  bcrypt.hash(req.body.password, 10, (err, hash) => {
-    if (err)
-      return res.json({ Status: false, Error: "Error hashing password" });
+  // Handle image upload (check if image exists)
+  const imageFile = req.file ? req.file.filename : null;
 
-    const values = [
-      req.body.name,
-      req.body.email,
-      hash,
-      req.body.address,
-      req.body.salary,
-      req.file ? req.file.filename : null, // Handle image file conditionally
-      req.body.category_id,
-    ];
-
-    con.query(sql, [values], (err, result) => {
-      if (err) return res.json({ Status: false, Error: err.message });
-      return res.json({ Status: true });
-    });
-  });
-});
-
-// Retrieve all employees
-router.get("/employee", (req, res) => {
-  const sql = "SELECT * FROM employee";
-  con.query(sql, (err, result) => {
-    if (err) return res.json({ Status: false, Error: "Query Error" });
-    return res.json({ Status: true, Result: result });
-  });
-});
-
-// Retrieve specific employee by ID
-router.get("/employee/:id", (req, res) => {
-  const id = req.params.id;
-  const sql = "SELECT * FROM employee WHERE id = ?";
-  con.query(sql, [id], (err, result) => {
-    if (err) return res.json({ Status: false, Error: "Query Error" });
-    return res.json({ Status: true, Result: result });
-  });
-});
-
-// Edit employee information
-router.put("/edit_employee/:id", (req, res) => {
-  const id = req.params.id;
-  const sql = `UPDATE employee 
-    SET name = ?, email = ?, salary = ?, address = ?, category_id = ? 
-    WHERE id = ?`;
+  const sql = `INSERT INTO employee (name, email, password, address, salary, image, category_id) 
+    VALUES (?, ?, ?, ?, ?, ?, ?)`;
 
   const values = [
     req.body.name,
     req.body.email,
-    req.body.salary,
+    req.body.password, // No bcrypt here, plain password
     req.body.address,
-    req.body.category_id,
+    req.body.salary,
+    imageFile, // Image file
+    req.body.category_id, // Category ID
   ];
 
-  con.query(sql, [...values, id], (err, result) => {
-    if (err) return res.json({ Status: false, Error: "Query Error" + err });
-    return res.json({ Status: true, Result: result });
+  con.query(sql, values, (err, result) => {
+    if (err) {
+      console.error("SQL Error:", err.message); // Log error for debugging
+      return res.json({ Status: false, Error: err.message });
+    }
+    return res.json({ Status: true, Message: "Employee added successfully" });
   });
 });
 
@@ -152,7 +115,7 @@ router.delete("/delete_employee/:id", (req, res) => {
   const sql = "DELETE FROM employee WHERE id = ?";
   con.query(sql, [id], (err, result) => {
     if (err) return res.json({ Status: false, Error: "Query Error" + err });
-    return res.json({ Status: true, Result: result });
+    return res.json({ Status: true, Message: "Employee deleted successfully" });
   });
 });
 
@@ -174,6 +137,16 @@ router.get("/employee_count", (req, res) => {
   });
 });
 
+router.get("/employee_list", (req, res) => {
+  const sql = "SELECT * FROM employee"; // SQL query to fetch all employee records
+  con.query(sql, (err, result) => {
+    if (err) {
+      console.error("SQL Error:", err.message); // Log error for debugging
+      return res.json({ Status: false, Error: "Query Error" });
+    }
+    return res.json({ Status: true, Result: result }); // Return the list of employees
+  });
+});
 // Get the sum of salaries of all employees
 router.get("/salary_count", (req, res) => {
   const sql = "SELECT SUM(salary) AS salaryOFEmp FROM employee";
@@ -195,7 +168,7 @@ router.get("/admin_records", (req, res) => {
 // Logout and clear the token cookie
 router.get("/logout", (req, res) => {
   res.clearCookie("token");
-  return res.json({ Status: true });
+  return res.json({ Status: true, Message: "Logged out successfully" });
 });
 
 export { router as adminRouter };
