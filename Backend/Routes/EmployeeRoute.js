@@ -5,6 +5,7 @@ import bcrypt from "bcrypt"; // or bcryptjs if you are using that
 
 const router = express.Router();
 
+//employee login logic
 router.post("/employee_login", (req, res) => {
   const sql = "SELECT * FROM employee WHERE email = ?";
   con.query(sql, [req.body.email], (err, result) => {
@@ -51,9 +52,9 @@ router.get("/detail/:id", (req, res) => {
   });
 });
 
-// Logout route (clears cookie)
+// Logout route (clears cookie)  -- clearing cookies from browser developers tool
 router.get("/logout", (req, res) => {
-  res.clearCookie("token"); // Clear the JWT cookie
+  res.clearCookie("token");
   return res.json({ Status: true });
 });
 
