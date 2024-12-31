@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import './style.css';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
@@ -6,24 +6,13 @@ import { useNavigate } from 'react-router-dom';
 const EmployeeLogin = () => {
   const [values, setValues] = useState({ email: '', password: '' });
   const [error, setError] = useState(null);
-  const [isChecked, setIsChecked] = useState(false); // Track checkbox state
   const navigate = useNavigate();
 
-  useEffect(() => {
-    axios.defaults.withCredentials = true; // Ensure cookies are included in requests
-  }, []); // Run once when component mounts
+  axios.defaults.withCredentials = true; // Ensure cookies are included in requests
 
   const handleSubmit = (event) => {
     event.preventDefault();
     setError(null); // Clear previous errors
-
-    // Basic form validation
-    if (!values.email || !values.password) {
-      setError('Email and Password are required');
-      return;
-    }
-
-    // Submit form to backend
     axios.post('http://localhost:3000/employee/employee_login', values)
       .then(result => {
         if (result.data.loginStatus) {
@@ -43,7 +32,7 @@ const EmployeeLogin = () => {
     <div className='d-flex justify-content-center align-items-center vh-100 loginPage'>
       <div className='p-3 rounded w-25 border loginForm'>
         <div className='text-warning'>
-          {error && <p className="error-message">{error}</p>}
+          {error && error}
         </div>
         <h2>Login Page</h2>
         <form onSubmit={handleSubmit}>
@@ -54,7 +43,6 @@ const EmployeeLogin = () => {
               name='email' 
               autoComplete='off' 
               placeholder='Enter Email'
-              value={values.email} 
               onChange={(e) => setValues({ ...values, email: e.target.value })}
               className='form-control rounded-0' 
             />
@@ -65,28 +53,15 @@ const EmployeeLogin = () => {
               type="password" 
               name='password' 
               placeholder='Enter Password'
-              value={values.password} 
               onChange={(e) => setValues({ ...values, password: e.target.value })}
               className='form-control rounded-0' 
             />
           </div>
-          <div className='mb-1'>
-            <input 
-              type="checkbox" 
-              name="tick" 
-              id="tick" 
-              className='me-2' 
-              checked={isChecked} 
-              onChange={(e) => setIsChecked(e.target.checked)} 
-            />
-            <label htmlFor="tick">You agree with terms & conditions</label>
+          <button className='btn btn-success w-100 rounded-0 mb-2'>Log in</button>
+          <div className='mb-1'> 
+            <input type="checkbox" name="tick" id="tick" className='me-2' />
+            <label htmlFor="password">You agree with terms & conditions</label>
           </div>
-          <button 
-            className='btn btn-success w-100 rounded-0 mb-2' 
-            disabled={!isChecked} // Disable button if checkbox is not checked
-          >
-            Log in
-          </button>
         </form>
       </div>
     </div>

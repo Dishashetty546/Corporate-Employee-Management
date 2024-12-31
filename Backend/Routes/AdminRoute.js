@@ -6,7 +6,7 @@ import path from "path";
 
 const router = express.Router();
 
-// Admin login route (no password hashing)
+//Admin login API
 router.post("/adminlogin", (req, res) => {
   const sql = "SELECT * from admin WHERE email = ?";
   con.query(sql, [req.body.email], (err, result) => {
@@ -15,7 +15,7 @@ router.post("/adminlogin", (req, res) => {
     if (result.length > 0) {
       const admin = result[0];
 
-      // Direct password comparison (no bcrypt)
+      //Password comparing to database password
       if (req.body.password === admin.password) {
         const token = jwt.sign(
           { role: "admin", email: admin.email, id: admin.id },
@@ -36,7 +36,25 @@ router.post("/adminlogin", (req, res) => {
   });
 });
 
-// Category retrieval
+router.get("/employee/detail/:id", (req, res) => {
+  const { id } = req.params;
+  const sql = "SELECT * FROM employee WHERE id = ?";
+
+  con.query(sql, [id], (err, result) => {
+    if (err) {
+      console.error("SQL Error:", err.message);
+      return res.status(500).json({ Status: false, Error: "Query Error" });
+    }
+    if (result.length === 0) {
+      return res
+        .status(404)
+        .json({ Status: false, Error: "Employee not found" });
+    }
+    return res.status(200).json({ Status: true, Data: result[0] });
+  });
+});
+
+//Category present in the database
 router.get("/category", (req, res) => {
   const sql = "SELECT * FROM category";
   con.query(sql, (err, result) => {
@@ -45,12 +63,12 @@ router.get("/category", (req, res) => {
   });
 });
 
-// Add new category
+//Adding new category into category
 router.post("/add_category", (req, res) => {
   const sql = "INSERT INTO category (name) VALUES (?)";
   con.query(sql, [req.body.category], (err, result) => {
     if (err) {
-      console.error("SQL Error:", err.message); // Log the error for debugging
+      console.error("SQL Error:", err.message);
       return res.json({ Status: false, Error: "Query Error" });
     }
     return res.json({ Status: true, Message: "Category added successfully" });
@@ -71,9 +89,7 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage: storage });
 
-// Add new employee with image upload
 router.post("/add_employee", upload.single("image"), (req, res) => {
-  // Ensure required fields are present
   if (
     !req.body.name ||
     !req.body.email ||
