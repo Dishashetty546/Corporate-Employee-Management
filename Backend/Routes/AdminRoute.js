@@ -150,6 +150,46 @@ router.get("/employee_count", (req, res) => {
   });
 });
 
+router.post("/add_project", (req, res) => {
+  const sql =
+    "INSERT INTO projects (name, description, start_date, end_date) VALUES (?, ?, ?, ?)";
+  const values = [
+    req.body.name,
+    req.body.description,
+    req.body.start_date,
+    req.body.end_date,
+  ];
+  con.query(sql, values, (err, result) => {
+    if (err) return res.json({ Status: false, Error: "Query Error" + err });
+    return res.json({ Status: true, Result: result });
+  });
+});
+
+// Assign project to an employee
+router.post("/assign_project", (req, res) => {
+  const sql =
+    "INSERT INTO employee_projects (employee_id, project_id) VALUES (?, ?)";
+  const values = [req.body.employee_id, req.body.project_id];
+  con.query(sql, values, (err, result) => {
+    if (err) return res.json({ Status: false, Error: "Query Error" + err });
+    return res.json({ Status: true, Result: result });
+  });
+});
+
+// Get projects assigned to a specific employee
+router.get("/employee_projects/:employee_id", (req, res) => {
+  const employee_id = req.params.employee_id;
+  const sql = `
+    SELECT p.id, p.name, p.description, p.start_date, p.end_date 
+    FROM projects p
+    INNER JOIN employee_projects ep ON p.id = ep.project_id
+    WHERE ep.employee_id = ?`;
+  con.query(sql, [employee_id], (err, result) => {
+    if (err) return res.json({ Status: false, Error: "Query Error" + err });
+    return res.json({ Status: true, Result: result });
+  });
+});
+
 //salary count - display, sum of all employee's salary
 router.get("/salary_count", (req, res) => {
   const sql = "select sum(salary) as salaryOFEmp from employee";

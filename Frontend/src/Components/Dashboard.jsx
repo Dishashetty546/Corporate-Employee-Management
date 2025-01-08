@@ -25,7 +25,7 @@ const Dashboard = () => {
               className="d-flex align-items-center pb-3 mb-md-1 mt-md-3 me-md-auto text-white text-decoration-none"
             >
               <span className="fs-5 fw-bolder d-none d-sm-inline">
-                Code With Yousof
+               Corporate
               </span>
             </Link>
             <ul
@@ -41,6 +41,15 @@ const Dashboard = () => {
                   <span className="ms-2 d-none d-sm-inline">Dashboard</span>
                 </Link>
               </li>
+              <li className="w-100">
+  <Link
+    to="/dashboard/projects"
+    className="nav-link px-0 align-middle text-white"
+  >
+    <i className="fs-4 bi-clipboard ms-2"></i>
+    <span className="ms-2 d-none d-sm-inline">Projects</span>
+  </Link>
+</li>
               <li className="w-100">
                 <Link
                   to="/dashboard/employee"

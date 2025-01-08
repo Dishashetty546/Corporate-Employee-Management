@@ -104,7 +104,22 @@ Query OK, 1 row affected (0.00 sec)
 
 
 
+-----------------------------------------------------------------------------------------------------------------------------------
+CREATE TABLE projects (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    start_date DATE,
+    end_date DATE
+);
 
+CREATE TABLE employee_projects (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    employee_id INT NOT NULL,
+    project_id INT NOT NULL,
+    FOREIGN KEY (employee_id) REFERENCES employee(id) ON DELETE CASCADE,
+    FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
+);
 
 
 

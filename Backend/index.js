@@ -10,9 +10,9 @@ const app = express();
 // CORS Configuration
 app.use(
   cors({
-    origin: "http://localhost:5173", // Allowing only this origin for security
+    origin: "http://localhost:5173",
     methods: ["GET", "POST", "PUT", "DELETE"],
-    credentials: true, // Allow sending cookies with requests
+    credentials: true,
   })
 );
 
